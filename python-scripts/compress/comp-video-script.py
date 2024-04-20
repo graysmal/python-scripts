@@ -41,16 +41,23 @@ for x in range(int(audio_track_count)):
     else:
         enabled_tracks.append(False)
 # generate part of command for keeping and removing tracks
-track_data = ""
+track_data = "-filter_complex \""
 enabled_count = 0
+all_disabled_query = True
 for x, value in enumerate(enabled_tracks):
     if value:
+        all_disabled_query = False
         track_data = track_data + "[0:a:" + str(x) + "]"
         enabled_count += 1
-track_data += "amerge=inputs=" + str(enabled_count)
+if (all_disabled_query):
+    track_data = "-an"
+else:
+    track_data += "amerge=inputs=" + str(enabled_count) + "\""
 
-# run ffmpeg commands and rename output
-os.system("ffmpeg -i \"" + file_path + "\" -filter_complex \"" + track_data + "\" -vf scale=1920:1080 -b:v " + str(total_rate*.75) + "k -b:a " + str(total_rate*.25) + "k \"" + parent_dir + "\\Compressed\\" + file_name + "-compressed--mb.mp4")
+# run ffmpeg commands and rename output 
+# not sure why but I used to have this option included : -vf scale=1920:1080
+print("ffmpeg -i \"" + file_path + "\" -b:v " + str(total_rate*.75) + "k -b:a " + str(total_rate*.25) + "k " + track_data + "\"" + " \"" + parent_dir + "\\Compressed\\" + file_name + "-compressed--mb.mp4")
+os.system("ffmpeg -i \"" + file_path + "\" -b:v " + str(total_rate*.75) + "k -b:a " + str(total_rate*.25) + "k " + track_data + " \"" + parent_dir + "\\Compressed\\" + file_name + "-compressed--mb.mp4")
 file_size = subprocess.getoutput("MediaInfo --Output=General;%FileSize/String% " + "\"" + parent_dir + "\\Compressed\\" + file_name + "-compressed--mb.mp4\"")
 file_size = file_size[0:4]
 os.system("rename " + "\"" + parent_dir + "\\Compressed\\" + file_name + "-compressed--mb.mp4\" \"" + file_name + "-compressed" + file_size + "mb.mp4\"")
